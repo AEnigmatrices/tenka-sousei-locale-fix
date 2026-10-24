@@ -197,6 +197,9 @@ static void __cdecl RequireForwarding(void)
     SetLastError(saved);
 }
 
+/* Capture the caller at the exported boundary. Unknown call sites forward
+ * without touching CRT state; recognized callers must pass the locale guard.
+ */
 void *WINAPI ProxyDirect3DCreate8(UINT sdk)
 {
     typedef void *(WINAPI *CreateFunction)(UINT);
@@ -210,7 +213,7 @@ void *WINAPI ProxyDirect3DCreate8(UINT sdk)
         (caller == base + TENKA_CALLSITE_A_RETURN_RVA ||
          caller == base + TENKA_CALLSITE_B_RETURN_RVA)) {
         if (!EnsureGameLocale(base, sdk)) {
-            SetLastError(g_gameError); return NULL;
+            SetLastError(g_localeInitError); return NULL;
         }
     }
     SetLastError(saved);

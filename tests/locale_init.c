@@ -67,7 +67,7 @@ static BOOL HashOriginalFile(const WCHAR *path, BYTE digest[32])
     if (scenario == WRONG_HASH) digest[0] ^= 1;
     return scenario != FILE_FAILED;
 }
-static BOOL CheckCode(ULONG_PTR base, DWORD rva, DWORD bytes, const BYTE digest[32])
+static BOOL MatchesCodeFingerprint(ULONG_PTR base, DWORD rva, DWORD bytes, const BYTE digest[32])
 {
     (void)base; (void)rva; (void)bytes; (void)digest;
     ++code_calls;
@@ -168,17 +168,17 @@ int main(void)
         unsigned images, files, codes, captures;
         scenario = cases[i].scenario;
         image_calls = file_calls = code_calls = capture_calls = setter_calls = 0;
-        InitOnceInitialize(&g_gameOnce);
-        g_gameOK = FALSE;
-        g_gameError = ERROR_DLL_INIT_FAILED;
+        InitOnceInitialize(&g_localeInitOnce);
+        g_localeInitSucceeded = FALSE;
+        g_localeInitError = ERROR_DLL_INIT_FAILED;
         CHECK(EnsureGameLocale(TestBase(), scenario == WRONG_SDK ? 0 : TENKA_D3D_SDK_VERSION) == expected);
-        CHECK(g_gameError == cases[i].error);
+        CHECK(g_localeInitError == cases[i].error);
         CHECK(setter_calls == cases[i].setters);
         images = image_calls; files = file_calls; codes = code_calls; captures = capture_calls;
         /* Changing the inputs must not retry a completed success or refusal. */
         scenario = expected ? WRONG_IMAGE : FIX_UTF8;
         CHECK(EnsureGameLocale(TestBase(), TENKA_D3D_SDK_VERSION) == expected);
-        CHECK(g_gameError == cases[i].error);
+        CHECK(g_localeInitError == cases[i].error);
         CHECK(setter_calls == cases[i].setters);
         CHECK(image_calls == images && file_calls == files &&
               code_calls == codes && capture_calls == captures);
