@@ -43,7 +43,7 @@ The setter is **never** invoked for other initial code pages, malformed tables,
 unrecognized executables, unstable state, or unsupported call sites.
 
 The offsets, region sizes, hashes, CP numbers, and recorded CRT tables are
-build-specific values in `compat/verified_inputs.h`; they are not generic
+build-specific values in `compat/verified_inputs.h` (with table data in `compat/crt_tables.h`); they are not generic
 Windows addresses or signatures for arbitrary game revisions.
 
 ## One-time outcomes and errors
@@ -88,7 +88,8 @@ link units merely for cosmetic organization.
 
 Use `source\build.cmd` and `tests\run.cmd` in a Visual Studio x86 Native
 Tools environment. The native suite currently exercises **28**
-locale-initialization scenarios, one-time results, export names/ordinals,
+locale-initialization scenarios, one-time results, path validation,
+real memory-protection and code-fingerprint guards, export names/ordinals,
 opaque thunk bytes, and Direct3D 8 forwarding. Most locale inputs are
 controlled test doubles; passing them is not proof of compatibility with an
 unrecognized executable or Windows environment.
