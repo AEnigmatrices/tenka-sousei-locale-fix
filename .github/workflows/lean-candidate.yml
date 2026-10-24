@@ -1,0 +1,31 @@
+name: Build lean DLL candidate
+
+on:
+  push:
+    branches: [experimental/lean-dll]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile x86 DLL
+        shell: cmd
+        working-directory: source
+        run: |
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86
+          cl.exe /nologo /c /TC /O1 /Oi- /GS- /Zl /W4 /WX /D_WIN32_WINNT=0x0602 /FoD3D8Proxy.obj D3D8Proxy.c
+          link.exe /NOLOGO /DLL /NODEFAULTLIB /ENTRY:DllMain@12 /SUBSYSTEM:WINDOWS /MACHINE:X86 /DYNAMICBASE /NXCOMPAT /SAFESEH /INCREMENTAL:NO /MANIFEST:NO /OPT:REF /OPT:ICF /DEF:d3d8.def /MAP:d3d8.map /OUT:d3d8.dll D3D8Proxy.obj kernel32.lib bcrypt.lib
+      - name: Check PE exports and checksum
+        shell: pwsh
+        working-directory: source
+        run: |
+          & dumpbin.exe /headers d3d8.dll | Select-String 'machine \(x86\)' 
+          & dumpbin.exe /exports d3d8.dll
+          Get-FileHash d3d8.dll -Algorithm SHA256 | Format-List
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lean-d3d8-candidate-untested
+          path: source/d3d8.dll
+          if-no-files-found: error
