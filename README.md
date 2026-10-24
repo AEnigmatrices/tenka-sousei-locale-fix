@@ -44,9 +44,9 @@ The [source code](source/README.md) and [build instructions](source/BUILDING.md)
 | Original EXE SHA-256 | `b835b6a50129f7bb07e6310490d7a259cbab65e6396ee61c735e1ea4b413c14d` |
 | Tested platform | Windows 11 build 26300, x86 game under WOW64 |
 | Recognized initial CRT state | Code page 65001, or verified correct 932 |
-| Published DLL SHA-256 | `487afc6cbaece7d56892ab44871549c11466dcf50a07ffd776bcddc35f231495` |
+| Published DLL SHA-256 | `d74f91b2e7f9f605c72eb4c95bf037d6bd5e7039860ca126b912a20f205ec5ed` |
 
-The **exact published 17,920-byte DLL** passed a normal Steam launch without Locale Emulator. Opening English tutorial dialogue and adjacent Japanese UI were legible, and the game exited normally. This does **not** certify every screen, save behavior, other game builds, or other Windows configurations.
+The **previous 17,920-byte logging-enabled DLL** passed one controlled Steam trial. **The current streamlined DLL is compiled and export-checked but has not yet been game-tested.** Full-game and multi-system compatibility remain unverified.
 
 ## Troubleshooting
 
@@ -54,7 +54,7 @@ The **exact published 17,920-byte DLL** passed a normal Steam launch without Loc
 
 **There is already a `d3d8.dll` in the folder:** It may be part of another graphics mod. **Do not overwrite it.** The current fix cannot chain with another Direct3D 8 proxy.
 
-**Diagnostics:** The DLL may write JSONL logs to `%LOCALAPPDATA%\TenkaSouseiCP932\Logs`. These may remain after uninstalling.
+**Logging:** The streamlined DLL no longer creates runtime diagnostic logs.
 
 **Security:** The preview DLL is unsigned. Verify its checksum and inspect the source if desired; only run binaries you trust.
 
