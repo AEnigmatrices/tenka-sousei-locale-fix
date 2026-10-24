@@ -12,7 +12,7 @@ cl.exe /nologo /TC /W4 /WX /O1 /D_WIN32_WINNT=0x0602 /Foforwarding_smoke.obj /Fe
 if errorlevel 1 goto failed
 cl.exe /nologo /TC /W4 /WX /O1 /D_WIN32_WINNT=0x0602 /wd4505 /Fopath_validation.obj /Fepath_validation.exe ..\..\tests\path_validation.c
 if errorlevel 1 goto failed
-cl.exe /nologo /TC /W4 /WX /O1 /D_WIN32_WINNT=0x0602 /wd4505 /Fointegrity_memory.obj /Feintegrity_memory.exe ..\..\tests\integrity_memory.c bcrypt.lib
+cl.exe /nologo /TC /W4 /WX /O1 /D_WIN32_WINNT=0x0602 /wd4505 /Fointegrity_memory.obj /Feintegrity_memory.exe ..\..\tests\integrity_memory.c /link bcrypt.lib
 if errorlevel 1 goto failed
 locale_init.exe
 if errorlevel 1 goto failed
