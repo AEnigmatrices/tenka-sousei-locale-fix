@@ -66,6 +66,14 @@ The game expects Japanese **CP932** text encoding. Its older text-processing run
 
 The game loads this fix as a **Direct3D 8 proxy**. It forwards graphics calls to the Windows Direct3D 8 library and uses the recognized game's existing multibyte initialization routine to select CP932. It does not replace graphics assets or create runtime diagnostic logs.
 
+### First, what is a DLL?
+
+A **DLL** (short for **Dynamic-Link Library**) is a Windows file, usually ending in `.dll`, that contains code and sometimes other resources for programs to use. Rather than building every feature into a program's `.exe` file, developers can put reusable functionality in a DLL and have Windows load it when needed.
+
+In this case, `Nobunaga11WPK.exe` is the game, while `d3d8.dll` provides **Direct3D 8 graphics functions** that the game calls. Windows normally supplies this library, so there does not have to be a `d3d8.dll` in the game folder.
+
+A DLL is **executable code, not just a data file**. You generally don't launch one directly like an `.exe`; instead, a program loads it and calls its functions. This is why the origin of a DLL matters—and why the security warning below is worth reading.
+
 ### Why does placing one DLL beside the game work?
 
 The game asks Windows to load a library named `d3d8.dll` for Direct3D 8 graphics. For this game's ordinary DLL lookup, Windows can find a file with that name **in the game's folder before the system copy**. The original installation does not need to contain its own `d3d8.dll`: without this fix, Windows normally loads its own.
