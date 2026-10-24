@@ -1,0 +1,53 @@
+name: Publish release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "VERSION"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-2022
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Check out release revision
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Package checked-in DLL
+        shell: pwsh
+        run: ./scripts/package-release.ps1
+
+      - name: Publish versioned assets
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = (Get-Content VERSION -Raw).Trim()
+          $tag = "v$version"
+          git show-ref --verify --quiet "refs/tags/$tag"
+          if ($LASTEXITCODE -eq 0) {
+            $tagCommit = git rev-list -n 1 $tag
+            if ($LASTEXITCODE -ne 0 -or $tagCommit -ne $env:GITHUB_SHA) {
+              throw "Tag $tag already points to another commit."
+            }
+          } elseif ($LASTEXITCODE -ne 1) {
+            throw "Cannot inspect tag $tag."
+          }
+          gh release create $tag --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "Tenka Sousei Locale Fix $tag" --notes-file dist/release-notes.md --latest dist/tenka-sousei-locale-fix-windows-x86.zip dist/d3d8.dll dist/SHA256SUMS.txt dist/release.json
+          if ($LASTEXITCODE -ne 0) { throw "Release publication failed for $tag." }

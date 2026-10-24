@@ -1,6 +1,10 @@
 # Building
 
-Use the **x86 Native Tools Command Prompt for Visual Studio** with Microsoft Visual C++ and a Windows SDK. The original preview was built using MSVC **14.44.35207** and Windows SDK **10.0.26100.0**.
+Use the **x86 Native Tools Command Prompt for Visual Studio** with Microsoft Visual C++ and a Windows SDK.
+
+The [Windows build workflow](../.github/workflows/build.yml) builds the source on `windows-2022` using the hosted Visual Studio 2022 x86 toolchain. The recorded local toolchain is MSVC **14.44.35207** and Windows SDK **10.0.26100.0**.
+
+## Compile and link
 
 From the `source/` folder, run:
 
@@ -9,10 +13,14 @@ cl.exe /nologo /c /TC /O1 /Oi- /GS- /Zl /W4 /WX /D_WIN32_WINNT=0x0602 /FoD3D8Pro
 link.exe /NOLOGO /DLL /NODEFAULTLIB /ENTRY:DllMain@12 /SUBSYSTEM:WINDOWS /MACHINE:X86 /DYNAMICBASE /NXCOMPAT /SAFESEH /INCREMENTAL:NO /MANIFEST:NO /OPT:REF /OPT:ICF /DEF:d3d8.def /MAP:d3d8.map /OUT:d3d8.dll D3D8Proxy.obj kernel32.lib bcrypt.lib
 ```
 
-The streamlined version removes logging and the Shell API dependency; `shell32.lib` is no longer linked.
+The implementation uses `kernel32.lib` and `bcrypt.lib`. It does not link `shell32.lib` or a separate C runtime.
 
-The implementation intentionally avoids introducing a new C runtime. It uses the game's verified internal CRT setter under strict game-identity, caller, and state checks. The Direct3D exports include x86 assembly forwarding stubs with ABI-sensitive behavior.
+The Direct3D exports include x86 assembly forwarding stubs with ABI-sensitive behavior. The workflow checks the output architecture and all five exported names and ordinals.
 
-**Important:** A successful rebuild is not automatically a validated release. The checked-in [`../d3d8.dll`](../d3d8.dll) is the **new compiled and export-checked streamlined binary**, not the previously gameplay-tested one. Build outputs may differ due to linker metadata, and the reorganized source has not yet been compiled in the recorded Windows environment. Before substituting a rebuilt DLL, check its exports/ordinals, all compatibility guards and error paths, then separately test it in-game. Never silently overwrite the published tested binary.
+## Build outputs and releases
 
-Do not compile or test by writing to the original game installation directory.
+Local compilation writes `source/d3d8.dll`; CI uploads the compiled DLL as a workflow artifact.
+
+Release packaging uses the separate, checked-in `../d3d8.dll`. Rebuilding with another toolchain or linker metadata can produce a different checksum. Each release's `release.json` records the packaged DLL's size, SHA-256, and repository commit.
+
+Build in the repository's `source/` folder. See [RELEASING.md](../RELEASING.md) for versioning and packaging.

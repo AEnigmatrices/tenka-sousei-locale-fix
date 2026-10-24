@@ -1,0 +1,43 @@
+Tenka Sousei Locale Fix
+https://github.com/AEnigmatrices/tenka-sousei-locale-fix
+
+For Windows and the Steam game that uses Nobunaga11WPK.exe.
+
+INSTALL
+
+Close the game before installing. If another mod has already placed a
+d3d8.dll in the game folder, keep that file. This fix cannot be installed
+alongside another Direct3D 8 proxy.
+
+1. Extract the downloaded ZIP.
+2. In Steam, right-click the game and choose Manage > Browse local files.
+3. Copy d3d8.dll beside Nobunaga11WPK.exe.
+4. Launch normally through Steam, without Locale Emulator.
+
+Only d3d8.dll needs to be copied into the game folder.
+
+UNINSTALL
+
+Close the game and remove the d3d8.dll you installed.
+
+LIMITATIONS
+
+The fix restores Japanese text; it does not translate the game into English.
+The window title and other Windows-managed strings may remain garbled.
+
+IF THE GAME DOES NOT LAUNCH
+
+Remove this fix's d3d8.dll and try again. If removing it restores startup,
+leave the fix uninstalled.
+
+PACKAGE CONTENTS
+
+d3d8.dll       - The compatibility fix
+INSTALL.txt    - These instructions
+LICENSE        - MIT License for the fix
+CHANGELOG.md   - Version history
+release.json   - Version, repository commit, DLL size, and SHA-256
+SHA256SUMS.txt  - Checksums for the files in this ZIP
+
+This is an unofficial fan project, unaffiliated with Koei Tecmo, Steam,
+or Microsoft. No game executable or proprietary game resources are included.

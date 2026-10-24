@@ -1,4 +1,4 @@
-# MSVC intermediates; root d3d8.dll is the exact published preview.
+# MSVC intermediates; the root d3d8.dll is the release binary.
 *.obj
 *.exp
 *.lib
@@ -13,3 +13,6 @@ Debug/
 Release/
 x86/
 x64/
+/source/d3d8.dll
+/source/exports.txt
+/dist/

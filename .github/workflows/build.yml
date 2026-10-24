@@ -69,11 +69,10 @@ jobs:
           Write-Host "Compiled x86 d3d8.dll: $($dll.Length) bytes; SHA-256: $sha"
           "### Windows x86 DLL build" >> $env:GITHUB_STEP_SUMMARY
           "Compiled DLL SHA-256: $sha" >> $env:GITHUB_STEP_SUMMARY
-          "This CI build has not been tested in the game." >> $env:GITHUB_STEP_SUMMARY
 
-      - name: Upload untested CI build
+      - name: Upload compiled DLL
         uses: actions/upload-artifact@v7
         with:
-          name: d3d8-windows-x86-ci-untested
+          name: d3d8-windows-x86-build
           path: source/d3d8.dll
           if-no-files-found: error

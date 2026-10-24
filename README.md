@@ -1,8 +1,16 @@
 # Tenka Sousei Locale Fix
 
-**Fix garbled Japanese text in *Nobunaga's Ambition: Tenka Sousei* (天下創世), without Locale Emulator, on the supported Steam build.**
+**Fix garbled Japanese text in *Nobunaga's Ambition: Tenka Sousei* (天下創世) and launch directly through Steam, without Locale Emulator.**
 
-This unofficial, drop-in compatibility fix does not change Windows' system locale or modify the game's executable.
+For Windows and the Steam game that uses `Nobunaga11WPK.exe`. This unofficial, drop-in fix leaves your Windows system locale and the game's executable on disk unchanged.
+
+## Download
+
+[**Download the fix for Windows**](https://github.com/AEnigmatrices/tenka-sousei-locale-fix/releases/latest/download/tenka-sousei-locale-fix-windows-x86.zip)
+
+The ZIP contains `d3d8.dll` and installation instructions. Only the DLL needs to go in your game folder.
+
+[All releases](https://github.com/AEnigmatrices/tenka-sousei-locale-fix/releases) · [Changelog](CHANGELOG.md)
 
 ## Before and after
 
@@ -12,13 +20,13 @@ The red circles highlight Japanese help text in the game's start menu. Click eit
 | :---: | :---: |
 | [![Before: Japanese help text is garbled](images/before.webp)](images/before.webp) | [![After: Japanese help text is readable](images/after.webp)](images/after.webp) |
 
-*The title bar may still display garbled text. The fix corrects the game's internal text handling, not every Windows-managed string.*
-
 ## Installation
 
-1. Download [**d3d8.dll**](d3d8.dll) from this repository (open the file and select **Download raw file**).
+Close the game before installing. If the game folder already contains `d3d8.dll` from another mod, keep that file: this fix cannot be installed alongside another Direct3D 8 proxy.
+
+1. Download and extract **tenka-sousei-locale-fix-windows-x86.zip** using the link above.
 2. In Steam, right-click the game and select **Manage → Browse local files**.
-3. **Copy `d3d8.dll` into the game's installation folder** (the folder containing `Nobunaga11WPK.exe`).
+3. Copy the extracted **`d3d8.dll`** into the folder containing **`Nobunaga11WPK.exe`**.
 4. Launch the game normally through Steam, without Locale Emulator.
 
 ```text
@@ -28,48 +36,36 @@ Game installation folder/
 └── ...
 ```
 
-**To uninstall:** Close the game, then remove the add-on's `d3d8.dll` from that folder.
+Japanese menu help text should appear as shown in the “With the fix” screenshot.
 
-## Why does Japanese text become gibberish?
+## Uninstallation
 
-The game expects the Japanese **CP932** character encoding (closely related to Shift-JIS). On some Windows setups, its older text-processing runtime initializes using a different code page—on the tested computer, **UTF-8 / code page 65001**. This causes Japanese bytes to be interpreted incorrectly.
+Close the game, then remove the `d3d8.dll` you installed from the game folder.
 
-### Previous workaround: Locale Emulator
+## Known limitations
 
-[Locale Emulator](https://github.com/xupefei/Locale-Emulator) has long provided a useful way to launch older Japanese games in a Japanese locale environment without changing Windows' system locale. It remains an alternative for versions our DLL doesn't support. This fix allows the supported build to start normally from Steam.
-
-## How does `d3d8.dll` work?
-
-The game uses Microsoft's **Direct3D 8** graphics interface. Our `d3d8.dll` is a proxy that forwards graphics calls to the real Windows Direct3D 8 library. When it recognizes the exact supported game build and a known safe startup state, it calls the game's **existing** multibyte initialization routine to select Japanese CP932.
-
-It does **not** modify the EXE on disk, translate the game into English, change Windows' global locale, or replace graphics assets. Some Windows-managed strings, including the window title, may remain garbled.
-
-The [source code](source/README.md) and [build instructions](source/BUILDING.md) are available for inspection.
-
-The [Windows build workflow](.github/workflows/build.yml) compiles the 32-bit DLL on GitHub Actions, verifies the Direct3D 8 exports, and provides a downloadable CI artifact. These workflow builds are **not automatically gameplay-tested releases**.
-
-## Compatibility
-
-| | Tested or supported |
-| --- | --- |
-| Game | Steam PC version, `Nobunaga11WPK.exe` |
-| Original EXE SHA-256 | `b835b6a50129f7bb07e6310490d7a259cbab65e6396ee61c735e1ea4b413c14d` |
-| Tested platform | Windows 11 build 26300, x86 game under WOW64 |
-| Recognized initial CRT state | Code page 65001, or verified correct 932 |
-| Published DLL SHA-256 | `d74f91b2e7f9f605c72eb4c95bf037d6bd5e7039860ca126b912a20f205ec5ed` |
-
-The **previous 17,920-byte logging-enabled DLL** passed one controlled Steam trial. **The current streamlined DLL is compiled and export-checked but has not yet been game-tested.** Full-game and multi-system compatibility remain unverified.
+- This fix restores Japanese text; it does not translate the game into English.
+- Some Windows-managed strings, including the window title, may remain garbled.
+- Another graphics mod that also uses `d3d8.dll` cannot be installed alongside this fix.
 
 ## Troubleshooting
 
-**The game still shows gibberish, or won't launch:** Verify the DLL is in the game installation folder and your EXE matches the supported build. Unrecognized code pages or builds are deliberately refused.
+**Text is still garbled:** Make sure the ZIP has been extracted and `d3d8.dll` is directly beside `Nobunaga11WPK.exe`, then restart the game through Steam.
 
-**There is already a `d3d8.dll` in the folder:** It may be part of another graphics mod. **Do not overwrite it.** The current fix cannot chain with another Direct3D 8 proxy.
+**The game will not launch:** Remove this fix's `d3d8.dll` and try launching again. If removing it restores startup, leave the fix uninstalled. The source documentation describes the game-build and runtime conditions the DLL recognizes.
 
-**Logging:** The streamlined DLL no longer creates runtime diagnostic logs.
+**Using a different game version:** [Locale Emulator](https://github.com/xupefei/Locale-Emulator) remains an alternative way to launch older Japanese games in a Japanese locale environment.
 
-**Security:** The preview DLL is unsigned. Verify its checksum and inspect the source if desired; only run binaries you trust.
+## How it works
+
+The game expects Japanese **CP932** text encoding. Its older text-processing runtime can initialize with a different code page, causing Japanese bytes to be interpreted incorrectly.
+
+The game loads this fix as a **Direct3D 8 proxy**. It forwards graphics calls to the Windows Direct3D 8 library and uses the recognized game's existing multibyte initialization routine to select CP932. It does not replace graphics assets or create runtime diagnostic logs.
+
+[Source code](source/README.md) · [Build instructions](source/BUILDING.md) · [Release process](RELEASING.md)
 
 ## About this project
 
-This is an **unofficial fan-made compatibility fix** and is not affiliated with Koei Tecmo, Steam, or Microsoft. The repository contains no proprietary game executable or game resources. The fix is supplied **as-is**.
+This is an **unofficial fan-made compatibility fix**, unaffiliated with Koei Tecmo, Steam, or Microsoft. The repository contains no proprietary game executable or game resources.
+
+The fix's code is available under the [MIT License](LICENSE). Game content shown in the screenshots belongs to its respective owners.
