@@ -4,6 +4,16 @@
 
 This unofficial, drop-in compatibility fix does not change Windows' system locale or modify the game's executable.
 
+## Before and after
+
+The red circles highlight Japanese help text in the game's start menu. Click either screenshot to view it at full size.
+
+| Without the fix | With the fix |
+| :---: | :---: |
+| [![Before: Japanese help text is garbled](images/before.webp)](images/before.webp) | [![After: Japanese help text is readable](images/after.webp)](images/after.webp) |
+
+*The title bar may still display garbled text. The fix corrects the game's internal text handling, not every Windows-managed string.*
+
 ## Installation
 
 1. Download [**d3d8.dll**](d3d8.dll) from this repository (open the file and select **Download raw file**).
@@ -35,6 +45,8 @@ The game uses Microsoft's **Direct3D 8** graphics interface. Our `d3d8.dll` is a
 It does **not** modify the EXE on disk, translate the game into English, change Windows' global locale, or replace graphics assets. Some Windows-managed strings, including the window title, may remain garbled.
 
 The [source code](source/README.md) and [build instructions](source/BUILDING.md) are available for inspection.
+
+The [Windows build workflow](.github/workflows/build.yml) compiles the 32-bit DLL on GitHub Actions, verifies the Direct3D 8 exports, and provides a downloadable CI artifact. These workflow builds are **not automatically gameplay-tested releases**.
 
 ## Compatibility
 
