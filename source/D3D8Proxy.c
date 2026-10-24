@@ -48,8 +48,6 @@ typedef struct Trial {
     WCHAR image_path[MAX_PATH];
     const char *status;
 } Trial;
-typedef struct Text { char bytes[8192]; DWORD length; BOOL ok; } Text;
-static Text g_text; /* Accessed only by the single game-init callback. */
 
 static void ZeroBytes(void *destination, SIZE_T length)
 {
@@ -79,7 +77,6 @@ static BOOL AppendWide(WCHAR *out, DWORD capacity, const WCHAR *a, const WCHAR *
 
 #include "platform/portable_paths.inc"
 #include "compat/integrity.inc"
-#include "diagnostics/crt_log.inc"
 #include "graphics/direct3d8_forwarding.inc"
 static BOOL EnsureForwarding(void)
 {
@@ -103,17 +100,11 @@ static BOOL CALLBACK InitializeGame(PINIT_ONCE once, PVOID parameter, PVOID *con
 {
     Trial *trial = (Trial *)parameter;
     State refreshed;
-    HANDLE log;
     DWORD length;
     typedef int (__cdecl *GameSetMbcp)(int);
     (void)once; (void)context;
     trial->status = "refused";
     trial->error = ERROR_REVISION_MISMATCH;
-    log = OpenTrialLog();
-    if (log == INVALID_HANDLE_VALUE) {
-        g_gameError = GetLastError();
-        return TRUE;
-    }
     length = GetModuleFileNameW(NULL, trial->image_path, MAX_PATH);
     trial->image_path[MAX_PATH - 1] = 0;
     if (!length || length >= MAX_PATH || !PortableGameLocation(trial->image_path) ||
@@ -133,13 +124,7 @@ static BOOL CALLBACK InitializeGame(PINIT_ONCE once, PVOID parameter, PVOID *con
     }
     if (trial->before.guard != 1 || trial->before.page != 65001 ||
         !EqualBytes(trial->before.table, kNormalTable, sizeof(kNormalTable))) goto done;
-    trial->status = "validated_before_setter";
-    trial->error = ERROR_SUCCESS;
-    if (!WriteRecord(log, trial, "intent")) {
-        trial->error = ERROR_WRITE_FAULT;
-        trial->status = "intent_log_failed_no_setter";
-        goto done;
-    }
+    /* The verified CRT state must still hold immediately before mutation. */
     if (!CaptureState(trial->base, &refreshed) || refreshed.guard != 1 ||
         refreshed.page != 65001 ||
         refreshed.selector_flag != trial->before.selector_flag ||
@@ -156,8 +141,6 @@ static BOOL CALLBACK InitializeGame(PINIT_ONCE once, PVOID parameter, PVOID *con
         goto done;
     }
     trial->mutable_ranges_verified = TRUE;
-    /* The only intended game-state-changing operation in this prototype.
-       No game instruction bytes, IAT slots, or global integers are patched. */
     trial->setter_called = TRUE;
     trial->setter_result = ((GameSetMbcp)(trial->base + TENKA_SETTER_RVA))(932);
     if (!CaptureState(trial->base, &trial->after) || trial->setter_result != 0 ||
@@ -170,12 +153,7 @@ static BOOL CALLBACK InitializeGame(PINIT_ONCE once, PVOID parameter, PVOID *con
     trial->error = ERROR_SUCCESS;
     g_gameOK = TRUE;
 done:
-    if (!WriteRecord(log, trial, "result")) {
-        g_gameOK = FALSE;
-        trial->error = ERROR_WRITE_FAULT;
-    }
     g_gameError = trial->error;
-    CloseHandle(log);
     return TRUE; /* Seal success/refusal; never retry a partial setter call. */
 }
 

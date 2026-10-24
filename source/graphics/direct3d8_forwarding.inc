@@ -119,166 +119,64 @@ static BOOL MatchForwardImage(HMODULE module, const ForwardFile *file)
            (nt->FileHeader.Characteristics & IMAGE_FILE_DLL);
 }
 
-static void FChar(char c)
-{
-    if (g_forwardText.length >= sizeof(g_forwardText.bytes)) g_forwardText.ok = FALSE;
-    else g_forwardText.bytes[g_forwardText.length++] = c;
-}
-static void FText(const char *s) { while (*s) FChar(*s++); }
-static void FNumber(DWORD v)
-{
-    char reverse[10]; DWORD n = 0;
-    do { reverse[n++] = (char)('0' + v % 10); v /= 10; } while (v);
-    while (n) FChar(reverse[--n]);
-}
-static void FHex32(DWORD value)
-{
-    DWORD i;
-    for (i = 0; i < 8; ++i) FChar(HexDigit(value >> (28 - 4 * i)));
-}
-static void FWide(const WCHAR *s)
-{
-    WCHAR c; FChar('"');
-    while ((c = *s++) != 0) {
-        if (c == '\\' || c == '"') { FChar('\\'); FChar((char)c); }
-        else if (c >= 32 && c < 127) FChar((char)c);
-        else { FText("\\u"); FChar(HexDigit(c >> 12)); FChar(HexDigit(c >> 8)); FChar(HexDigit(c >> 4)); FChar(HexDigit(c)); }
-    }
-    FChar('"');
-}
-static void FFile(const ForwardFile *f)
-{
-    if (!f->metadata_available) { FText("null"); return; }
-    FText("{\"volume_serial\":"); FNumber(f->identity.dwVolumeSerialNumber);
-    FText(",\"file_index\":\""); FHex32(f->identity.nFileIndexHigh); FHex32(f->identity.nFileIndexLow); FChar('"');
-    FText(",\"size_low\":"); FNumber(f->identity.nFileSizeLow);
-    FText(",\"size_high\":"); FNumber(f->identity.nFileSizeHigh);
-    FText(",\"machine\":"); FNumber(f->machine);
-    FText(",\"magic\":"); FNumber(f->magic);
-    FText(",\"timestamp\":"); FNumber(f->timestamp);
-    FText(",\"image_bytes\":"); FNumber(f->image_bytes);
-    FText(",\"close_error\":"); FNumber(f->close_error);
-    FText(",\"valid\":"); FText(f->valid ? "true" : "false"); FChar('}');
-}
-static BOOL ForwardRecord(HANDLE file, BOOL flush, DWORD *error, BOOL *api)
-{
-    DWORD written; ForwardDiagnostic *d = &g_forwardDiagnostic;
-    g_forwardText.length = 0; g_forwardText.ok = TRUE;
-    FText("{\"schema\":\"Tenka.CP932.Forwarding.v3\",\"sequence\":"); FNumber(++d->sequence);
-    FText(",\"pid\":"); FNumber(GetCurrentProcessId()); FText(",\"tid\":"); FNumber(GetCurrentThreadId());
-    FText(",\"status\":\""); FText(d->status == 1 ? "success" : d->status == 2 ? "refused" : "pending");
-    FText("\",\"stage\":\""); FText(d->stage); FText("\",\"detail\":\""); FText(d->detail);
-    FText("\",\"return_error\":"); FNumber(d->return_error);
-    FText(",\"api_error\":"); if (d->api_error_available) FNumber(d->api_error); else FText("null");
-    FText(",\"export_ordinal\":"); FNumber(d->export_ordinal);
-    FText(",\"self_module\":\""); FHex32((DWORD)(ULONG_PTR)g_self); FChar('"');
-    FText(",\"system_module\":\""); FHex32((DWORD)(ULONG_PTR)g_system); FChar('"');
-    FText(",\"expected_path\":"); FWide(d->expected); FText(",\"reported_path\":"); FWide(d->actual);
-    FText(",\"self_path\":"); FWide(d->self);
-    FText(",\"expected_file\":"); FFile(&d->expected_file);
-    FText(",\"reported_file\":"); FFile(&d->actual_file);
-    FText(",\"self_file\":"); FFile(&d->self_file);
-    FText(",\"expected_after\":"); FFile(&d->expected_after); FText("}\n");
-    *api = FALSE; *error = ERROR_BUFFER_OVERFLOW;
-    if (!g_forwardText.ok) return FALSE;
-    if (!WriteFile(file, g_forwardText.bytes, g_forwardText.length, &written, NULL)) {
-        *error = GetLastError(); *api = TRUE; return FALSE;
-    }
-    if (written != g_forwardText.length) { *error = ERROR_WRITE_FAULT; return FALSE; }
-    if (flush && !FlushFileBuffers(file)) { *error = GetLastError(); *api = TRUE; return FALSE; }
-    return TRUE;
-}
-static void ForwardStderr(void)
-{
-    HANDLE file = GetStdHandle(STD_ERROR_HANDLE); DWORD error; BOOL api;
-    /* Best effort to an inherited handle only, never another filesystem path. */
-    if (file && file != INVALID_HANDLE_VALUE) (void)ForwardRecord(file, FALSE, &error, &api);
-}
-static HANDLE OpenForwardLog(BOOL *api, DWORD *error)
-{
-    WCHAR name[96], path[MAX_PATH]; FILETIME time;
-    HANDLE file;
-    DWORD values[4], i, j, n = 0;
-    const WCHAR prefix[] = L"forward-", suffix[] = L".jsonl";
-    const WCHAR *directory = PortableRuntimeDirectory();
-    if (!directory) { *api = TRUE; *error = GetLastError(); return INVALID_HANDLE_VALUE; }
-    GetSystemTimeAsFileTime(&time);
-    values[0] = time.dwHighDateTime; values[1] = time.dwLowDateTime;
-    values[2] = GetCurrentProcessId(); values[3] = GetCurrentThreadId();
-    for (i = 0; prefix[i]; ++i) name[n++] = prefix[i];
-    for (i = 0; i < 4; ++i) {
-        if (i) name[n++] = '-';
-        for (j = 0; j < 8; ++j) name[n++] = (WCHAR)HexDigit(values[i] >> (28 - 4 * j));
-    }
-    for (i = 0; suffix[i]; ++i) name[n++] = suffix[i]; name[n] = 0;
-    if (!AppendWide(path, MAX_PATH, directory, name)) {
-        *api = FALSE; *error = ERROR_BUFFER_OVERFLOW; return INVALID_HANDLE_VALUE;
-    }
-    file = CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (file == INVALID_HANDLE_VALUE) { *api = TRUE; *error = GetLastError(); }
-    return file;
-}
-static BOOL FinishForwarding(HANDLE log, BOOL final_record)
-{
-    DWORD error; BOOL api;
-    if (final_record && !ForwardRecord(log, TRUE, &error, &api)) {
-        ForwardFailure("diagnostic_write", "WriteFile_or_FlushFileBuffers", error, api, error);
-        ForwardStderr();
-    } else if (!final_record) ForwardStderr();
-    if (!CloseHandle(log)) {
-        error = GetLastError(); ForwardFailure("diagnostic_close", "CloseHandle", error, TRUE, error);
-        ForwardStderr();
-    }
-    g_forwardOK = g_forwardDiagnostic.status == 1;
-    g_forwardError = g_forwardOK ? ERROR_SUCCESS : g_forwardDiagnostic.return_error;
-    return TRUE; /* Seal success/refusal; never retry file/API operations. */
-}
+/* All file, mapped-image, export name and ordinal checks remain enabled.
+ * Only the diagnostic serialization/file I/O path is removed.
+ */
 static BOOL CALLBACK InitializeForwarding(PINIT_ONCE once, PVOID parameter, PVOID *context)
 {
     ForwardDiagnostic *d = &g_forwardDiagnostic;
-    WCHAR directory[MAX_PATH]; HANDLE log; BOOL wow64 = FALSE, api;
-    DWORD length, error, i; const char *detail; FARPROC by_ordinal;
+    WCHAR directory[MAX_PATH];
+    BOOL wow64 = FALSE, api;
+    DWORD length, error, i;
+    const char *detail;
+    FARPROC by_ordinal;
     (void)once; (void)parameter; (void)context;
-    ZeroBytes(d, sizeof(*d)); d->stage = "begin"; d->detail = "no_system_load_yet";
-    log = OpenForwardLog(&api, &error);
-    if (log == INVALID_HANDLE_VALUE) {
-        ForwardFailure("diagnostic_open", "CreateFileW_or_path_capacity", error, api, api ? error : 0);
-        g_forwardError = d->return_error; ForwardStderr(); return TRUE;
-    }
-    if (!ForwardRecord(log, TRUE, &error, &api)) {
-        ForwardFailure("diagnostic_write", "initial_record", error, api, error); return FinishForwarding(log, FALSE);
-    }
+    ZeroBytes(d, sizeof(*d));
+    d->stage = "begin";
+    d->detail = "initialization";
     if (!IsWow64Process(GetCurrentProcess(), &wow64)) {
         error = GetLastError(); ForwardFailure("architecture_query", "IsWow64Process", error, TRUE, error); goto finish;
     }
     length = wow64 ? GetSystemWow64DirectoryW(directory, MAX_PATH) : GetSystemDirectoryW(directory, MAX_PATH);
-    if (!length) { error = GetLastError(); ForwardFailure("system_directory", "GetSystemDirectory_API", error, TRUE, error); goto finish; }
+    if (!length) {
+        error = GetLastError(); ForwardFailure("system_directory", "GetSystemDirectory_API", error, TRUE, error); goto finish;
+    }
     if (length >= MAX_PATH || !AppendWide(d->expected, MAX_PATH, directory, L"\\d3d8.dll")) {
         ForwardFailure("system_directory", "path_capacity", ERROR_BUFFER_OVERFLOW, FALSE, 0); goto finish;
     }
     length = GetModuleFileNameW(g_self, d->self, MAX_PATH);
-    if (!length) { error = GetLastError(); ForwardFailure("self_path", "GetModuleFileNameW", error, TRUE, error); goto finish; }
-    if (length >= MAX_PATH) { d->self[MAX_PATH - 1] = 0; ForwardFailure("self_path", "truncated", ERROR_BUFFER_OVERFLOW, FALSE, 0); goto finish; }
+    if (!length) {
+        error = GetLastError(); ForwardFailure("self_path", "GetModuleFileNameW", error, TRUE, error); goto finish;
+    }
+    if (length >= MAX_PATH) {
+        d->self[MAX_PATH - 1] = 0; ForwardFailure("self_path", "truncated", ERROR_BUFFER_OVERFLOW, FALSE, 0); goto finish;
+    }
     if (!InspectForwardFile(d->self, &d->self_file, &detail, &api, &error)) {
         ForwardFailure("self_file", detail, error, api, api ? error : 0); goto finish;
     }
-    if (!MatchForwardImage(g_self, &d->self_file)) { ForwardFailure("self_image", "PE_headers_disagree", ERROR_REVISION_MISMATCH, FALSE, 0); goto finish; }
+    if (!MatchForwardImage(g_self, &d->self_file)) {
+        ForwardFailure("self_image", "PE_headers_disagree", ERROR_REVISION_MISMATCH, FALSE, 0); goto finish;
+    }
     if (!InspectForwardFile(d->expected, &d->expected_file, &detail, &api, &error)) {
         ForwardFailure("expected_file", detail, error, api, api ? error : 0); goto finish;
     }
     if (SameForwardFileId(&d->expected_file.identity, &d->self_file.identity)) {
         ForwardFailure("self_identity", "expected_file_is_proxy", ERROR_REVISION_MISMATCH, FALSE, 0); goto finish;
     }
-    d->stage = "before_system_load"; d->detail = "expected_x86_file_recorded";
-    if (!ForwardRecord(log, TRUE, &error, &api)) {
-        ForwardFailure("diagnostic_write", "preload_record", error, api, error); return FinishForwarding(log, FALSE);
-    }
     g_system = LoadLibraryExW(d->expected, NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
-    if (!g_system) { error = GetLastError(); ForwardFailure("system_load", "LoadLibraryExW", error, TRUE, error); goto finish; }
-    if (g_system == g_self) { ForwardFailure("self_module", "loaded_proxy_handle", ERROR_REVISION_MISMATCH, FALSE, 0); goto finish; }
+    if (!g_system) {
+        error = GetLastError(); ForwardFailure("system_load", "LoadLibraryExW", error, TRUE, error); goto finish;
+    }
+    if (g_system == g_self) {
+        ForwardFailure("self_module", "loaded_proxy_handle", ERROR_REVISION_MISMATCH, FALSE, 0); goto finish;
+    }
     length = GetModuleFileNameW(g_system, d->actual, MAX_PATH);
-    if (!length) { error = GetLastError(); ForwardFailure("reported_path", "GetModuleFileNameW", error, TRUE, error); goto finish; }
-    if (length >= MAX_PATH) { d->actual[MAX_PATH - 1] = 0; ForwardFailure("reported_path", "truncated", ERROR_BUFFER_OVERFLOW, FALSE, 0); goto finish; }
+    if (!length) {
+        error = GetLastError(); ForwardFailure("reported_path", "GetModuleFileNameW", error, TRUE, error); goto finish;
+    }
+    if (length >= MAX_PATH) {
+        d->actual[MAX_PATH - 1] = 0; ForwardFailure("reported_path", "truncated", ERROR_BUFFER_OVERFLOW, FALSE, 0); goto finish;
+    }
     if (!InspectForwardFile(d->actual, &d->actual_file, &detail, &api, &error)) {
         ForwardFailure("reported_file", detail, error, api, api ? error : 0); goto finish;
     }
@@ -300,12 +198,20 @@ static BOOL CALLBACK InitializeForwarding(PINIT_ONCE once, PVOID parameter, PVOI
     for (i = 0; i < EXP_COUNT; ++i) {
         d->export_ordinal = i + 1;
         g_real[i] = GetProcAddress(g_system, kExports[i]);
-        if (!g_real[i]) { error = GetLastError(); ForwardFailure("export_name", kExports[i], error, TRUE, error); goto finish; }
+        if (!g_real[i]) {
+            error = GetLastError(); ForwardFailure("export_name", kExports[i], error, TRUE, error); goto finish;
+        }
         by_ordinal = GetProcAddress(g_system, (LPCSTR)(ULONG_PTR)(i + 1));
-        if (!by_ordinal) { error = GetLastError(); ForwardFailure("export_ordinal", kExports[i], error, TRUE, error); goto finish; }
-        if (g_real[i] != by_ordinal) { ForwardFailure("export_compare", kExports[i], ERROR_REVISION_MISMATCH, FALSE, 0); goto finish; }
+        if (!by_ordinal) {
+            error = GetLastError(); ForwardFailure("export_ordinal", kExports[i], error, TRUE, error); goto finish;
+        }
+        if (g_real[i] != by_ordinal) {
+            ForwardFailure("export_compare", kExports[i], ERROR_REVISION_MISMATCH, FALSE, 0); goto finish;
+        }
     }
     d->status = 1; d->stage = "forward_ready"; d->detail = "identity_PE_and_exports_verified";
 finish:
-    return FinishForwarding(log, TRUE);
+    g_forwardOK = d->status == 1;
+    g_forwardError = g_forwardOK ? ERROR_SUCCESS : d->return_error;
+    return TRUE;
 }
