@@ -1,0 +1,15 @@
+# MSVC intermediates; root d3d8.dll is the exact published preview.
+*.obj
+*.exp
+*.lib
+*.map
+*.pdb
+*.ilk
+*.idb
+*.pch
+*.tlog
+.vs/
+Debug/
+Release/
+x86/
+x64/
