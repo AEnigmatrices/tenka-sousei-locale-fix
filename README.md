@@ -1,97 +1,109 @@
-# Tenka Sousei Locale Fix
+# Tenka Sousei CP932 compatibility add-on — 0.1.0-preview.1
 
-**Fix garbled Japanese text in *Nobunaga's Ambition: Tenka Sousei* (天下創世) on supported Windows installations—without Locale Emulator.**
+**Offline-validated preview. This revised portable DLL has not yet been tested
+in the game.** Its earlier research build passed a normal Steam launch and the
+opening English tutorial with readable Japanese UI. Use this archive for the
+next supervised preview trial, not as a claimed general release.
 
-This free, unofficial compatibility add-on requires no changes to the game's executable or to your Windows system locale.
+This add-on keeps the original Steam executable unchanged. An installation-local
+`d3d8.dll` forwards graphics calls to Windows and, at verified startup calls,
+asks the game's existing CRT routine to select CP932. It does not change Windows
+locale settings or the process's Win32 ANSI/OEM code pages.
 
-## Before and after
+## Supported build
 
-The screenshots are ready to add: one shows garbled Japanese menu help text, and the other shows the corrected Japanese text in the same scene. The image assets have not yet been uploaded to this repository.
+- Native x86 `Nobunaga11WPK.exe`, exactly4,968,544 bytes.
+- Required executable SHA-256:
+  `b835b6a50129f7bb07e6310490d7a259cbab65e6396ee61c735e1ea4b413c14d`.
+- Preview DLL SHA-256: `487afc6cbaece7d56892ab44871549c11466dcf50a07ffd776bcddc35f231495` (17920 bytes).
+- The narrow runtime guards accept the verified UTF-8/65001 CRT state or an
+  already-correct932 state. Other states and other executable builds are refused.
+- Windows10/11 is the intended host; offline testing was on Windows x64. Other
+  platforms and broader locale/gameplay behavior have not been validated.
 
-The window title bar may remain garbled: this fix targets the game's internal text processing, not every Windows UI string.
+Game and DLL must be in the same ordinary local directory, with those filenames.
+Unicode and alternate drive-letter paths are supported within the bounded
+MAX_PATH limits; UNC/device paths and very long paths are not supported.
+No other installation-local `d3d8.dll` may already be present. Chaining with
+graphics wrappers, overlays implemented as the same DLL, or other d3d8 proxies
+is not implemented. Never overwrite an existing wrapper.
 
-## Installation
+## File verification
 
-1. **Download the preview ZIP from [GitHub Releases](https://github.com/AEnigmatrices/tenka-sousei-locale-fix/releases) when published**, then extract it. The first public binary release is not uploaded yet.
-2. In **Steam**, right-click the game and choose **Manage → Browse local files**. Open the folder containing `Nobunaga11WPK.exe`.
-3. **Copy `d3d8.dll` into the game's installation folder.**
-4. Start the game **normally through Steam**, without Locale Emulator.
+Extract this package outside the game installation. The included script is
+read-only: it checks file hashes/PE32 identities, and never copies, removes,
+loads or launches anything. It does not prove that the game is closed.
 
-That's it! There's no installer and no Windows configuration to change.
+In PowerShell, substitute your actual Steam game directory:
 
-```text
-Game installation folder/
-├── Nobunaga11WPK.exe
-├── d3d8.dll                 ← Copy this file into this folder
-└── ...
+```powershell
+.\Verify-Compatibility.ps1 -GameDirectory 'D:\SteamLibrary\steamapps\common\Nobunaga11WPK' -Mode PreInstall
 ```
 
-### Uninstall
+If a check fails or script execution is blocked, stop and report the output.
+Do not change security settings, enable a bypass, restore an older EXE over a
+Steam update, or force an installation. Use existing permissions; the package
+does not request elevation. The DLL and script are unsigned.
 
-Close the game, then remove **the compatibility add-on's** `d3d8.dll` from the game installation folder. Do not remove an unrelated DLL. Your original executable and game resources have not been replaced.
+## Install for the supervised preview trial
 
-## Why does this happen?
+1. Close the game and launcher. Confirm Steam has no update, download or
+   verification active for this title. Keep the existing options unchanged.
+2. Run the PreInstall check above. It requires the supported original EXE,
+   an intact package DLL, and **no existing game-directory d3d8.dll**.
+3. Copy **only this package's `d3d8.dll`** next to the verified
+   `Nobunaga11WPK.exe`. If Windows asks to replace a file, cancel and stop.
+   Do not replace the executable, launcher, tutorial, fonts or system d3d8.dll.
+4. Verify the added file:
 
-Tenka Sousei is an older Japanese game that expects Japanese **CP932 (Shift-JIS-compatible)** text processing. On some Windows installations, the game instead initializes its multibyte-text functions from another system code page. Japanese bytes can then be mistaken for different characters, producing garbled text.
-
-On the system used for testing, a normal launch initialized the game's text-processing runtime with **UTF-8 code page 65001**; launching through Locale Emulator Japan initialized it with **Japanese code page 932**.
-
-### The previous workaround: Locale Emulator
-
-[Locale Emulator](https://github.com/xupefei/Locale-Emulator) can launch older Japanese software with a Japanese locale environment without requiring a Windows-wide locale change. It remains a useful option, especially for game versions this add-on does not support.
-
-This fix is an alternative for the supported game build: install one DLL and start the game through Steam as usual.
-
-## What is `d3d8.dll` and how does it work?
-
-Tenka Sousei uses **Direct3D 8** for graphics. The included `d3d8.dll` is a small **Direct3D 8 proxy**: it passes the game's usual graphics calls through to the genuine Windows Direct3D library.
-
-For the **exact supported game executable**, the proxy also checks its loaded code and text-processing state, then asks the game's **existing** multibyte initialization routine to select **CP932**. It does not replace game text, translate anything, modify the EXE on disk, or change the Windows-wide code page.
-
-The program includes strict checks so it does not blindly alter an unknown game version. The implementation and build notes will be added to this repository alongside the binary release.
-
-## Compatibility
-
-This is an **early preview tested on one Windows 11 / Steam installation**, not a universal fix.
-
-| Requirement | Tested scope |
-| --- | --- |
-| Game | *Nobunaga's Ambition: Tenka Sousei* (Steam PC version), `Nobunaga11WPK.exe` |
-| Supported game EXE SHA-256 | `b835b6a50129f7bb07e6310490d7a259cbab65e6396ee61c735e1ea4b413c14d` |
-| Windows | Windows 11 build 26300 (tested), native x86 game under WOW64 |
-| Initial game CRT code page | 65001, or a verified already-correct 932 state |
-| Tested DLL SHA-256 | `487afc6cbaece7d56892ab44871549c11466dcf50a07ffd776bcddc35f231495` |
-
-Other game builds, Windows versions, and code pages have **not** been confirmed compatible. The fix may refuse to activate for an unsupported configuration.
-
-**Testing to date:** the exact DLL in this preview successfully ran through a normal Steam launch without Locale Emulator. The opening English tutorial and nearby Japanese interface text displayed legibly. A complete playthrough, save-game behavior, and all other UI screens have not yet been verified.
-
-## Troubleshooting
-
-**Nothing changes or the game fails to launch?** Confirm you have the supported game build, the DLL is in the same installation folder as `Nobunaga11WPK.exe`, and you are not launching through Locale Emulator at the same time. The add-on may refuse unknown versions or unexpected startup states.
-
-**Already have a `d3d8.dll` in that folder?** It may belong to another graphics mod. **Do not overwrite it**; this preview does not support chaining with other Direct3D 8 wrappers.
-
-**Want to verify compatibility?** A read-only PowerShell checker is available at [`scripts/Verify-Compatibility.ps1`](scripts/Verify-Compatibility.ps1). Running it is optional for the basic copy-and-play instructions. Do not weaken Windows security settings to run scripts.
-
-**Where are the logs?** The add-on can write diagnostics under `%LOCALAPPDATA%\TenkaSouseiCP932\Logs`. These logs may remain after removing the DLL.
-
-**Why is the window title still garbled?** The game's internal CRT code page is corrected, but Windows' broader ANSI/UI behavior is not changed.
-
-## Source, builds, and checksums
-
-The DLL's source and build instructions are planned for this repository; they have not yet been uploaded. The preview binary is **unsigned**, so use it only if you trust this repository and its source.
-
-The tested `d3d8.dll` is **17,920 bytes**, SHA-256:
-
-```text
-487afc6cbaece7d56892ab44871549c11466dcf50a07ffd776bcddc35f231495
+```powershell
+.\Verify-Compatibility.ps1 -GameDirectory 'D:\SteamLibrary\steamapps\common\Nobunaga11WPK' -Mode Installed
 ```
 
-The planned downloadable ZIP will contain the same tested DLL together with this README. A rebuilt DLL or differently packaged ZIP can have a different checksum and requires separate verification.
+The proposed trial uses the normal Steam -> existing launcher -> Start route,
+without Locale Emulator. Observe the first two opening tutorial blocks and
+exit normally. Stop on refusal, error, freeze or crash; do not retry or switch
+instrumentation automatically. New live execution requires the trial's separate
+approval; this archive's creation did not install or run it.
 
-## Disclaimer
+## Remove
 
-This is an **unofficial fan-made compatibility project**. It is not affiliated with or endorsed by Koei Tecmo, Steam, or Microsoft. It does not include any copyrighted game executable, decrypted game code, or game resources. You must own the game separately.
+Close the game and launcher and wait for idle Steam. Run the Installed check.
+If it confirms the exact preview DLL, delete **only the added game-directory
+`d3d8.dll`**, then check:
 
-The fix is supplied **as-is**, without a guarantee of compatibility with every system or game version.
+```powershell
+.\Verify-Compatibility.ps1 -GameDirectory 'D:\SteamLibrary\steamapps\common\Nobunaga11WPK' -Mode Removed
+```
+
+No original game file needs restoration: the add-on never replaces one. If a
+hash is unexpected, the game updated, or a copy/removal was interrupted, stop
+and inspect the physical files before choosing recovery. Do not delete an
+unknown DLL, change permissions, or use Steam verification as an automatic fix.
+
+## Diagnostics and limits
+
+The DLL creates its own two product folders under the current user's Windows
+local application-data folder:
+
+```text
+%LOCALAPPDATA%\TenkaSouseiCP932\Logs\
+```
+
+Forwarding and CRT JSONL logs use unique timestamp/process/thread filenames.
+Existing files are not overwritten. This replaces the old research-machine
+log path. Diagnostic folders/files are retained when the DLL is removed; they
+are separate from saves and game resources.
+
+The existing fail-closed behavior is preserved: if diagnostics cannot be
+created/flushed, identity checks fail, or CRT state is unexpected, initialization
+may be refused. There is no fallback that silently applies the setter without
+its required checks/intent record. Report the exact error and available logs.
+
+The previous prototype demonstrated selected dialogue and Japanese UI; it did
+not prove every interface, text layout, filename conversion, save path or
+Windows CP_ACP call works. The portable revision needs its own live trial.
+
+The `source` folder contains this add-on's implementation and build instructions.
+No game executable, decrypted game code or game resource is included. No Steam
+authentication, integrity or security enforcement is disabled.
