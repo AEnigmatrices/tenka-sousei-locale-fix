@@ -14,7 +14,7 @@ The red circles highlight the in-game help text. Note that the **window title ba
 
 ## Installation
 
-1. **[Download the ZIP](downloads/TenkaSousei-Locale-Fix-v0.1.0-preview.1.zip)** from this repository and extract it.
+1. **Download the preview ZIP from [GitHub Releases](https://github.com/AEnigmatrices/tenka-sousei-locale-fix/releases) when published**, then extract it. The first public binary release is not uploaded yet.
 2. In **Steam**, right-click the game and choose **Manage → Browse local files**. Open the folder containing `Nobunaga11WPK.exe`.
 3. **Copy `d3d8.dll` into the game's installation folder.**
 4. Start the game **normally through Steam**, without Locale Emulator.
@@ -50,7 +50,7 @@ Tenka Sousei uses **Direct3D 8** for graphics. The included `d3d8.dll` is a smal
 
 For the **exact supported game executable**, the proxy also checks its loaded code and text-processing state, then asks the game's **existing** multibyte initialization routine to select **CP932**. It does not replace game text, translate anything, modify the EXE on disk, or change the Windows-wide code page.
 
-The program includes strict checks so it does not blindly alter an unknown game version. The implementation is available in [`src/`](src/), with [build notes](BUILD.md).
+The program includes strict checks so it does not blindly alter an unknown game version. The implementation and build notes will be added to this repository alongside the binary release.
 
 ## Compatibility
 
@@ -82,7 +82,7 @@ Other game builds, Windows versions, and code pages have **not** been confirmed 
 
 ## Source, builds, and checksums
 
-This repository publishes the DLL's source in [`src/`](src/) and documented build instructions in [`BUILD.md`](BUILD.md). The preview binary is **unsigned**, so use it only if you trust this repository and its source.
+The DLL's source and build instructions are planned for this repository; they have not yet been uploaded. The preview binary is **unsigned**, so use it only if you trust this repository and its source.
 
 The tested `d3d8.dll` is **17,920 bytes**, SHA-256:
 
@@ -90,7 +90,7 @@ The tested `d3d8.dll` is **17,920 bytes**, SHA-256:
 487afc6cbaece7d56892ab44871549c11466dcf50a07ffd776bcddc35f231495
 ```
 
-The downloadable ZIP contains the same tested DLL together with this README. A rebuilt DLL or differently packaged ZIP can have a different checksum and requires separate verification.
+The planned downloadable ZIP will contain the same tested DLL together with this README. A rebuilt DLL or differently packaged ZIP can have a different checksum and requires separate verification.
 
 ## Disclaimer
 
