@@ -8,7 +8,8 @@ This is the implementation of the **x86 Direct3D 8 proxy** distributed as `d3d8.
 | --- | --- |
 | `D3D8Proxy.c` | Component include order and DLL entry point |
 | `support.inc` | Byte and bounded string helpers without a separate C runtime |
-| `compat/verified_inputs.h` | Named game offsets, sizes, code fingerprints, and CRT tables |
+| `compat/verified_inputs.h` | Verified executable offsets, sizes, fingerprints, and code pages |
+| `compat/crt_tables.h` | Exact CRT byte-classification tables for the verified pre/post states |
 | `compat/integrity.inc` | File hashing, image-memory checks, and writable-range validation |
 | `compat/crt_state.inc` | CRT state snapshots and multibyte-state validation |
 | `compat/locale_fix.inc` | One-time CP932 initialization and cached results |
@@ -26,5 +27,7 @@ The graphics module keeps the four opaque export stubs explicit. They preserve t
 The implementation omits runtime diagnostic bookkeeping and logging. It uses the game's existing CRT routine without linking a separate C runtime.
 
 Read [CONTRACTS.md](CONTRACTS.md) before modifying the locale initializer, game fingerprints, or the Direct3D forwarding boundary. It documents accepted states, ordering, failure policies, and ABI constraints.
+
+The character tables are included by `verified_inputs.h` from `crt_tables.h`. They are still compiled in the same C translation unit; no new link dependency or runtime data loading is introduced.
 
 See [BUILDING.md](BUILDING.md) for the shared build script and native checks. [Release packages](../RELEASING.md) include the checked-in DLL, its SHA-256, and the repository revision containing the source snapshot.
