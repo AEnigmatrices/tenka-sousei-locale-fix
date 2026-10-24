@@ -13,7 +13,6 @@ typedef struct ForwardDiagnostic {
     DWORD status; /* 0=pending,1=success,2=refused */
 } ForwardDiagnostic;
 static ForwardDiagnostic g_forwardDiagnostic;
-static Text g_forwardText;
 
 static BOOL SameForwardFileId(const BY_HANDLE_FILE_INFORMATION *a,
                               const BY_HANDLE_FILE_INFORMATION *b)
