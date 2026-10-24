@@ -6,11 +6,9 @@ This free, unofficial compatibility add-on requires no changes to the game's exe
 
 ## Before and after
 
-| Without the fix | With the fix |
-| :---: | :---: |
-| ![Corrupted Japanese menu help text before the fix](images/before.webp) | ![Readable Japanese menu help text after the fix](images/after.webp) |
+The screenshots are ready to add: one shows garbled Japanese menu help text, and the other shows the corrected Japanese text in the same scene. The image assets have not yet been uploaded to this repository.
 
-The red circles highlight the in-game help text. Note that the **window title bar may remain garbled**: this fix targets the game's internal text processing, not every Windows UI string.
+The window title bar may remain garbled: this fix targets the game's internal text processing, not every Windows UI string.
 
 ## Installation
 
