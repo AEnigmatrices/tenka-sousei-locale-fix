@@ -1,17 +1,13 @@
-#ifndef TENKA_PORTABLE_PATHS_H
-#define TENKA_PORTABLE_PATHS_H
-#include <shlobj.h>
-
-static DWORD PortableLength(const WCHAR *s)
+static DWORD BoundedPathLength(const WCHAR *s)
 {
     DWORD n = 0;
     if (!s) return MAX_PATH;
     while (n < MAX_PATH && s[n]) ++n;
     return n;
 }
-static BOOL PortableAbsolute(const WCHAR *s)
+static BOOL IsAbsoluteGamePath(const WCHAR *s)
 {
-    DWORD n = PortableLength(s), i, start;
+    DWORD n = BoundedPathLength(s), i, start;
     if (n < 3 || n >= MAX_PATH ||
         !((s[0] >= L'A' && s[0] <= L'Z') || (s[0] >= L'a' && s[0] <= L'z')) ||
         s[1] != L':' || s[2] != L'\\') return FALSE;
@@ -28,10 +24,10 @@ static BOOL PortableAbsolute(const WCHAR *s)
     }
     return TRUE;
 }
-static BOOL PortableSiblingPaths(const WCHAR *image, const WCHAR *self)
+static BOOL AreGameSiblingPaths(const WCHAR *image, const WCHAR *self)
 {
-    DWORD a = PortableLength(image), b = PortableLength(self), ia, ib;
-    if (!PortableAbsolute(image) || !PortableAbsolute(self)) return FALSE;
+    DWORD a = BoundedPathLength(image), b = BoundedPathLength(self), ia, ib;
+    if (!IsAbsoluteGamePath(image) || !IsAbsoluteGamePath(self)) return FALSE;
     ia = a; ib = b;
     while (ia && image[ia - 1] != L'\\') --ia;
     while (ib && self[ib - 1] != L'\\') --ib;
@@ -39,11 +35,10 @@ static BOOL PortableSiblingPaths(const WCHAR *image, const WCHAR *self)
         CompareStringOrdinal(image, (int)ia, self, (int)ib, TRUE) == CSTR_EQUAL &&
         EqualWide(image + ia, L"Nobunaga11WPK.exe") && EqualWide(self + ib, L"d3d8.dll");
 }
-static BOOL PortableGameLocation(const WCHAR *image)
+static BOOL IsGameLocation(const WCHAR *image)
 {
     WCHAR self[MAX_PATH];
     DWORD n = GetModuleFileNameW(g_self, self, MAX_PATH);
     if (!n || n >= MAX_PATH) return FALSE;
-    return PortableSiblingPaths(image, self);
+    return AreGameSiblingPaths(image, self);
 }
-#endif

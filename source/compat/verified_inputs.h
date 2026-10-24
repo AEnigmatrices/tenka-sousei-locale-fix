@@ -1,8 +1,34 @@
 #ifndef TENKA_VERIFIED_INPUTS_H
 #define TENKA_VERIFIED_INPUTS_H
+/* Executable identity and Direct3D startup contract. */
 #define TENKA_IMAGE_BASE 0x00400000u
 #define TENKA_IMAGE_SIZE 0x01546000u
+#define TENKA_EXE_SIZE 4968544u
+#define TENKA_D3D_SDK_VERSION 0xdcu
+
+/* Fingerprinted code regions and their known return addresses. */
 #define TENKA_SETTER_RVA 0x0034762bu
+#define TENKA_SETTER_SIZE 327u
+#define TENKA_CALLSITE_A_RVA 0x30f674u
+#define TENKA_CALLSITE_A_SIZE 13u
+#define TENKA_CALLSITE_A_RETURN_RVA 0x30f681u
+#define TENKA_CALLSITE_B_RVA 0x2fce59u
+#define TENKA_CALLSITE_B_SIZE 10u
+#define TENKA_CALLSITE_B_RETURN_RVA 0x2fce63u
+
+/* Existing CRT globals and the multibyte-info object. */
+#define TENKA_CRT_SELECTOR_RVA 0x14a5514u
+#define TENKA_CRT_FIELDS_RVA 0x14a6540u
+#define TENKA_CRT_FIELDS_SIZE 0x240u
+#define TENKA_CRT_INFO_POINTER_RVA 0x14a6544u
+#define TENKA_CRT_TABLE_RVA 0x14a6560u
+#define TENKA_CRT_TABLE_SIZE 257u
+#define TENKA_CRT_PAGE_RVA 0x14a6664u
+#define TENKA_CRT_GUARD_RVA 0x14a67b8u
+#define TENKA_CRT_INFO_SIZE 0x220u
+#define TENKA_CRT_READY 1u
+#define TENKA_UTF8_CODEPAGE 65001u
+#define TENKA_JAPANESE_CODEPAGE 932u
 static const unsigned char kOriginalSha256[] = {
     0xb8, 0x35, 0xb6, 0xa5, 0x01, 0x29, 0xf7, 0xbb, 0x07, 0xe6, 0x31, 0x04, 0x90, 0xd7, 0xa2, 0x59,
     0xcb, 0xab, 0x65, 0xe6, 0x39, 0x6e, 0xe6, 0x1c, 0x73, 0x5e, 0x1e, 0xa4, 0xb4, 0x13, 0xc1, 0x4d,

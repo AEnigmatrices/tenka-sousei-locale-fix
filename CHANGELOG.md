@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.1] - 2026-10-24
+
+- Add a direct DLL download and quick installation TL;DR to the README.
+- Separate locale initialization, CRT state, and graphics forwarding into focused components.
+- Remove unused diagnostic state and the unused Shell header.
+- Centralize the game's offsets, sizes, caller addresses, and code pages.
+- Use one build script for local builds, CI, and release verification.
+- Add native initialization and forwarding regression checks.
+- Reduce the compiled DLL from 11,776 to 9,728 bytes while preserving validation order and export stubs.
+
 ## [1.0.0] - 2026-10-24
 
 - Restore Japanese CP932 text handling through the game's existing runtime routine.
@@ -10,4 +20,5 @@
 - Reorganize installation and troubleshooting documentation.
 - Add the MIT License and an automated release workflow.
 
+[1.0.1]: https://github.com/AEnigmatrices/tenka-sousei-locale-fix/releases/tag/v1.0.1
 [1.0.0]: https://github.com/AEnigmatrices/tenka-sousei-locale-fix/releases/tag/v1.0.0

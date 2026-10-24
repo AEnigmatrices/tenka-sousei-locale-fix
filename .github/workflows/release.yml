@@ -28,6 +28,16 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Build source and run native checks
+        shell: cmd
+        run: |
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86
+          if errorlevel 1 exit /b 1
+          call source\build.cmd
+          if errorlevel 1 exit /b 1
+          call tests\run.cmd "%GITHUB_WORKSPACE%\d3d8.dll"
+          if errorlevel 1 exit /b 1
+
       - name: Package checked-in DLL
         shell: pwsh
         run: ./scripts/package-release.ps1

@@ -4,6 +4,10 @@
 
 For Windows and the Steam game that uses `Nobunaga11WPK.exe`. This unofficial, drop-in fix leaves your Windows system locale and the game's executable on disk unchanged.
 
+## TL;DR
+
+[**Download d3d8.dll**](https://github.com/AEnigmatrices/tenka-sousei-locale-fix/releases/latest/download/d3d8.dll), put it beside `Nobunaga11WPK.exe` in the game folder, then launch through Steam. Find the folder with **Steam → right-click the game → Manage → Browse local files**.
+
 ## Download
 
 [**Download the fix for Windows**](https://github.com/AEnigmatrices/tenka-sousei-locale-fix/releases/latest/download/tenka-sousei-locale-fix-windows-x86.zip)

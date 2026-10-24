@@ -5,11 +5,15 @@ on:
     branches: [main]
     paths:
       - "source/**"
+      - "tests/**"
+      - "scripts/verify-exports.ps1"
       - ".github/workflows/build.yml"
   pull_request:
     branches: [main]
     paths:
       - "source/**"
+      - "tests/**"
+      - "scripts/verify-exports.ps1"
       - ".github/workflows/build.yml"
   workflow_dispatch:
 
@@ -26,49 +30,15 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Compile x86 DLL and inspect PE
+      - name: Build x86 DLL and run native checks
         shell: cmd
-        working-directory: source
         run: |
           call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86
           if errorlevel 1 exit /b 1
-          cl.exe /nologo /c /TC /O1 /Oi- /GS- /Zl /W4 /WX /D_WIN32_WINNT=0x0602 /FoD3D8Proxy.obj D3D8Proxy.c
+          call source\build.cmd
           if errorlevel 1 exit /b 1
-          link.exe /NOLOGO /DLL /NODEFAULTLIB /ENTRY:DllMain@12 /SUBSYSTEM:WINDOWS /MACHINE:X86 /DYNAMICBASE /NXCOMPAT /SAFESEH /INCREMENTAL:NO /MANIFEST:NO /OPT:REF /OPT:ICF /DEF:d3d8.def /MAP:d3d8.map /OUT:d3d8.dll D3D8Proxy.obj kernel32.lib bcrypt.lib
+          call tests\run.cmd
           if errorlevel 1 exit /b 1
-          dumpbin.exe /headers d3d8.dll | findstr /C:"machine (x86)"
-          if errorlevel 1 exit /b 1
-          dumpbin.exe /exports d3d8.dll > exports.txt
-          if errorlevel 1 exit /b 1
-          type exports.txt
-
-      - name: Validate exports and print checksum
-        shell: pwsh
-        run: |
-          $exports = Get-Content "source/exports.txt"
-          $expected = @{
-            Direct3D8EnableMaximizedWindowedModeShim = 1
-            ValidatePixelShader = 2
-            ValidateVertexShader = 3
-            DebugSetMute = 4
-            Direct3DCreate8 = 5
-          }
-          foreach ($name in $expected.Keys) {
-            $ordinal = $expected[$name]
-            $pattern = "^\s*$ordinal\s+\d+\s+[0-9a-fA-F]+\s+$name\s*$"
-            if (-not ($exports -match $pattern)) {
-              throw "Missing or changed D3D8 export: $name at ordinal $ordinal"
-            }
-          }
-          if (-not ($exports -match "^\s*5 number of functions\s*$") -or
-              -not ($exports -match "^\s*5 number of names\s*$")) {
-            throw "Unexpected number of Direct3D 8 exports"
-          }
-          $dll = Get-Item "source/d3d8.dll"
-          $sha = (Get-FileHash $dll.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-          Write-Host "Compiled x86 d3d8.dll: $($dll.Length) bytes; SHA-256: $sha"
-          "### Windows x86 DLL build" >> $env:GITHUB_STEP_SUMMARY
-          "Compiled DLL SHA-256: $sha" >> $env:GITHUB_STEP_SUMMARY
 
       - name: Upload compiled DLL
         uses: actions/upload-artifact@v7
