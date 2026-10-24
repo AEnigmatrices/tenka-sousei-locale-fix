@@ -126,7 +126,8 @@ static BOOL CheckImage(ULONG_PTR base)
            nt->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC &&
            nt->OptionalHeader.SizeOfImage == TENKA_IMAGE_SIZE;
 }
-static BOOL CheckCode(ULONG_PTR base, DWORD rva, DWORD size, const BYTE digest[32])
+/* Compare executable memory at a verified RVA; the on-disk hash is checked separately. */
+static BOOL MatchesCodeFingerprint(ULONG_PTR base, DWORD rva, DWORD size, const BYTE digest[32])
 {
     BYTE found[32];
     return ImageRange(base, rva, size, TRUE) &&

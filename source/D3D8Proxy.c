@@ -22,6 +22,7 @@ static HMODULE g_self;
 BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 {
     (void)reserved;
+    /* Keep loader-lock work minimal; checks run on exported calls instead. */
     if (reason == DLL_PROCESS_ATTACH) g_self = instance;
     return TRUE;
 }

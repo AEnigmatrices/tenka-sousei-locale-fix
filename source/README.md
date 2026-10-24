@@ -25,4 +25,6 @@ The graphics module keeps the four opaque export stubs explicit. They preserve t
 
 The implementation omits runtime diagnostic bookkeeping and logging. It uses the game's existing CRT routine without linking a separate C runtime.
 
+Read [CONTRACTS.md](CONTRACTS.md) before modifying the locale initializer, game fingerprints, or the Direct3D forwarding boundary. It documents accepted states, ordering, failure policies, and ABI constraints.
+
 See [BUILDING.md](BUILDING.md) for the shared build script and native checks. [Release packages](../RELEASING.md) include the checked-in DLL, its SHA-256, and the repository revision containing the source snapshot.
