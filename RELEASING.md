@@ -10,7 +10,7 @@ The version in [VERSION](VERSION) controls release tags. Publishing a change to 
 4. Add a matching `## [major.minor.patch] - YYYY-MM-DD` entry to [CHANGELOG.md](CHANGELOG.md).
 5. Commit the DLL, source, version, and documentation together, then push to `main`.
 
-The release workflow builds the source and runs the native checks before publication. It packages the checked-in root DLL from the release commit, keeping its recorded checksum intact. The separate build workflow uses the same build and check scripts.
+The release workflow builds the source, tests the fresh build and checked-in root DLL, then checks the release package before publication. The checked-in root DLL remains the distributed binary; a rebuild is **not** assumed to be byte-identical. The build workflow runs the same checks on pull requests.
 
 ## Package locally
 
@@ -20,7 +20,13 @@ From a clean checkout, run:
 powershell -NoProfile -File scripts/package-release.ps1
 ```
 
-Files are written to the ignored `dist/` directory. For a local documentation or packaging check with uncommitted changes, add `-AllowDirty`; the manifest records that the working tree has changes. Publication requires a clean checkout.
+Files are written to the ignored `dist/` directory. Verify the ZIP, release manifest and both SHA-256 checksum layers with:
+
+```powershell
+powershell -NoProfile -File scripts/verify-release-package.ps1
+```
+
+For local checks with uncommitted changes, use `-AllowDirty` on **both** the packaging and verification scripts; the manifest records this state. Publication requires a clean checkout. Verifying packaged contents does not imply that a new DLL build has an identical checksum.
 
 ## Download assets
 
