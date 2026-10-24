@@ -7,6 +7,13 @@ on:
       - "source/**"
       - "tests/**"
       - "scripts/verify-exports.ps1"
+      - "scripts/package-release.ps1"
+      - "scripts/verify-release-package.ps1"
+      - "VERSION"
+      - "CHANGELOG.md"
+      - "INSTALL.txt"
+      - "LICENSE"
+      - "d3d8.dll"
       - ".github/workflows/build.yml"
   pull_request:
     branches: [main]
@@ -14,6 +21,13 @@ on:
       - "source/**"
       - "tests/**"
       - "scripts/verify-exports.ps1"
+      - "scripts/package-release.ps1"
+      - "scripts/verify-release-package.ps1"
+      - "VERSION"
+      - "CHANGELOG.md"
+      - "INSTALL.txt"
+      - "LICENSE"
+      - "d3d8.dll"
       - ".github/workflows/build.yml"
   workflow_dispatch:
 
@@ -37,8 +51,14 @@ jobs:
           if errorlevel 1 exit /b 1
           call source\build.cmd
           if errorlevel 1 exit /b 1
-          call tests\run.cmd
+          call tests\run.cmd "%GITHUB_WORKSPACE%\d3d8.dll"
           if errorlevel 1 exit /b 1
+
+      - name: Verify release packaging
+        shell: pwsh
+        run: |
+          ./scripts/package-release.ps1
+          ./scripts/verify-release-package.ps1
 
       - name: Upload compiled DLL
         uses: actions/upload-artifact@v7

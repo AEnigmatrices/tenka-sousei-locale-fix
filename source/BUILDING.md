@@ -28,7 +28,9 @@ The checks exercise 28 locale-initialization scenarios, cached successes and ref
 
 The locale checks supply controlled game and CRT inputs to the production initializer; they do not require game files. The path and memory checks exercise production helper functions directly against synthetic inputs and Windows-managed pages, without loading proprietary game data. The forwarding check loads the built proxy and creates and releases Direct3D 8 interface objects without creating a window or graphics device.
 
-To run the forwarding check against an additional DLL, pass its path to `tests\run.cmd`. Outputs stay under the ignored `dist/tests/` directory.
+To run the forwarding check against an additional DLL, pass its path to `tests\run.cmd` (for example, the checked-in root DLL). Outputs stay under the ignored `dist/tests/` directory.
+
+The CI build also runs `scripts/package-release.ps1` and `scripts/verify-release-package.ps1` to validate ZIP contents, loose release assets, their two checksum layers and the recorded source revision without changing the distributed binary.
 
 ## Build outputs and releases
 

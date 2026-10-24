@@ -42,6 +42,10 @@ jobs:
         shell: pwsh
         run: ./scripts/package-release.ps1
 
+      - name: Verify release package
+        shell: pwsh
+        run: ./scripts/verify-release-package.ps1
+
       - name: Publish versioned assets
         shell: pwsh
         env:
