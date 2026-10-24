@@ -64,7 +64,7 @@ Close the game, then remove the `d3d8.dll` you installed from the game folder.
 
 The game expects Japanese **CP932** text encoding. Its older text-processing runtime can initialize with a different code page, causing Japanese bytes to be interpreted incorrectly.
 
-The game loads this fix as a **Direct3D 8 proxy**. It forwards graphics calls to the Windows Direct3D 8 library and uses the recognized game's existing multibyte initialization routine to select CP932. It does not replace graphics assets or create runtime diagnostic logs.
+The game loads this fix as a **Direct3D 8 proxy**. It forwards graphics calls to the Windows Direct3D 8 library and uses the recognized game's existing multibyte initialization routine to select CP932.
 
 ### First, what is a DLL?
 
