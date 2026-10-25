@@ -31,7 +31,7 @@ Close the game before installing. If the game folder already contains `d3d8.dll`
 1. Download and extract **tenka-sousei-locale-fix-windows-x86.zip** using the link above.
 2. In Steam, right-click the game and select **Manage → Browse local files**.
 3. Copy the extracted **`d3d8.dll`** into the folder containing **`Nobunaga11WPK.exe`**.
-4. Launch the game normally through Steam, without Locale Emulator.
+4. Launch the game normally through Steam, as Gabe intended.
 
 ```text
 Game installation folder/
