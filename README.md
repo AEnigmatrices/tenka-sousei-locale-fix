@@ -1,6 +1,6 @@
 # Tenka Sousei Locale Fix
 
-**Fix garbled Japanese text in *Nobunaga's Ambition: Tenka Sousei* (天下創世) and launch directly through Steam, without Locale Emulator.**
+**Fix garbled Japanese text in *Nobunaga's Ambition: Tenka Sousei* (天下創世) and launch directly through Steam, as Gabe intended.**
 
 For Windows and the Steam game that uses `Nobunaga11WPK.exe`. This unofficial, drop-in fix leaves your Windows system locale and the game's executable on disk unchanged.
 
