@@ -4,12 +4,13 @@ The version in [VERSION](VERSION) controls release tags. Publishing a change to 
 
 ## Prepare a release
 
-1. Place the DLL to distribute at the repository root as `d3d8.dll`.
-2. Update `VERSION` using `major.minor.patch` format.
-3. Add a matching `## [major.minor.patch] - YYYY-MM-DD` entry to [CHANGELOG.md](CHANGELOG.md).
-4. Commit the DLL, source, version, and documentation together, then push to `main`.
+1. Run `source\build.cmd` and `tests\run.cmd` from an x86 Native Tools Command Prompt.
+2. Copy the DLL to distribute from `source/d3d8.dll` to the repository root as `d3d8.dll`.
+3. Update `VERSION` using `major.minor.patch` format.
+4. Add a matching `## [major.minor.patch] - YYYY-MM-DD` entry to [CHANGELOG.md](CHANGELOG.md).
+5. Commit the DLL, source, version, and documentation together, then push to `main`.
 
-The release workflow packages the checked-in DLL from that commit. It does not rebuild or replace the binary during publication. The separate build workflow compiles source and checks the x86 exports.
+The release workflow builds the source, tests the fresh build and checked-in root DLL, then checks the release package before publication. The checked-in root DLL remains the distributed binary; a rebuild is **not** assumed to be byte-identical. The build workflow runs the same checks on pull requests.
 
 ## Package locally
 
@@ -19,7 +20,13 @@ From a clean checkout, run:
 powershell -NoProfile -File scripts/package-release.ps1
 ```
 
-Files are written to the ignored `dist/` directory. For a local documentation or packaging check with uncommitted changes, add `-AllowDirty`; the manifest records that the working tree has changes. Publication requires a clean checkout.
+Files are written to the ignored `dist/` directory. Verify the ZIP, release manifest and both SHA-256 checksum layers with:
+
+```powershell
+powershell -NoProfile -File scripts/verify-release-package.ps1
+```
+
+For local checks with uncommitted changes, use `-AllowDirty` on **both** the packaging and verification scripts; the manifest records this state. Publication requires a clean checkout. Verifying packaged contents does not imply that a new DLL build has an identical checksum.
 
 ## Download assets
 
@@ -30,7 +37,7 @@ Files are written to the ignored `dist/` directory. For a local documentation or
 | `SHA256SUMS.txt` | SHA-256 values for the ZIP, standalone DLL, and manifest |
 | `release.json` | Version, tag, repository revision, DLL size, and SHA-256 |
 
-The ZIP name stays consistent so the README's latest-release download link works across versions. Each release tag provides a version-specific download URL.
+The ZIP and DLL names stay consistent so the README's latest-release download links work across versions. Each release tag provides version-specific download URLs.
 
 The manifest's repository commit identifies the source snapshot and checked-in DLL used for that release. It does not claim that a separate rebuild produces byte-identical output.
 

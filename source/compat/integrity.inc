@@ -1,3 +1,10 @@
+#include <bcrypt.h>
+
+typedef struct HashContext {
+    BCRYPT_ALG_HANDLE algorithm;
+    BCRYPT_HASH_HANDLE hash;
+    PUCHAR object;
+} HashContext;
 
 static void HashClose(HashContext *c)
 {
@@ -49,7 +56,7 @@ static BOOL HashOriginalFile(const WCHAR *path, BYTE digest[32])
                     NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (f == INVALID_HANDLE_VALUE) return FALSE;
     if (!GetFileInformationByHandle(f, &first) || first.nFileSizeHigh ||
-        first.nFileSizeLow != 4968544u || !HashOpen(&c)) {
+        first.nFileSizeLow != TENKA_EXE_SIZE || !HashOpen(&c)) {
         CloseHandle(f); return FALSE;
     }
     buffer = (BYTE *)HeapAlloc(GetProcessHeap(), 0, 16384);
@@ -57,7 +64,7 @@ static BOOL HashOriginalFile(const WCHAR *path, BYTE digest[32])
         for (;;) {
             if (!ReadFile(f, buffer, 16384, &count, NULL)) break;
             if (!count) {
-                if (total == 4968544u && GetFileInformationByHandle(f, &last) &&
+                if (total == TENKA_EXE_SIZE && GetFileInformationByHandle(f, &last) &&
                     first.dwVolumeSerialNumber == last.dwVolumeSerialNumber &&
                     first.nFileIndexHigh == last.nFileIndexHigh &&
                     first.nFileIndexLow == last.nFileIndexLow &&
@@ -67,7 +74,7 @@ static BOOL HashOriginalFile(const WCHAR *path, BYTE digest[32])
                     ok = BCryptFinishHash(c.hash, digest, 32, 0) >= 0;
                 break;
             }
-            if (count > 4968544u - total || BCryptHashData(c.hash, buffer, count, 0) < 0)
+            if (count > TENKA_EXE_SIZE - total || BCryptHashData(c.hash, buffer, count, 0) < 0)
                 break;
             total += count;
         }
@@ -119,7 +126,8 @@ static BOOL CheckImage(ULONG_PTR base)
            nt->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC &&
            nt->OptionalHeader.SizeOfImage == TENKA_IMAGE_SIZE;
 }
-static BOOL CheckCode(ULONG_PTR base, DWORD rva, DWORD size, const BYTE digest[32])
+/* Compare executable memory at a verified RVA; the on-disk hash is checked separately. */
+static BOOL MatchesCodeFingerprint(ULONG_PTR base, DWORD rva, DWORD size, const BYTE digest[32])
 {
     BYTE found[32];
     return ImageRange(base, rva, size, TRUE) &&
@@ -146,40 +154,3 @@ static BOOL WritableRange(ULONG_PTR address, DWORD bytes, ULONG_PTR image_base)
     }
     return TRUE;
 }
-static BOOL MutableCrtRanges(ULONG_PTR base, const State *state)
-{
-    /* Known selector flag, global multibyte fields/table/case map, and the
-       existing 0x220-byte multibyte-info object that the setter may reuse. */
-    return WritableRange(base + 0x14a5514, 4, base) &&
-           WritableRange(base + 0x14a6540, 0x240, base) &&
-           (!state->info_pointer || WritableRange(state->info_pointer, 0x220, base));
-}
-static BOOL CaptureState(ULONG_PTR base, State *state)
-{
-    DWORD i, page_after, guard_after, flag_after, pointer_after;
-    ZeroBytes(state, sizeof(*state));
-    if (!ImageRange(base, 0x14a6664, 4, FALSE) ||
-        !ImageRange(base, 0x14a67b8, 4, FALSE) ||
-        !ImageRange(base, 0x14a5514, 4, FALSE) ||
-        !ImageRange(base, 0x14a6544, 4, FALSE) ||
-        !ImageRange(base, 0x14a6560, 257, FALSE)) return FALSE;
-    state->page = *(volatile DWORD *)(base + 0x14a6664);
-    state->guard = *(volatile DWORD *)(base + 0x14a67b8);
-    state->selector_flag = *(volatile DWORD *)(base + 0x14a5514);
-    state->info_pointer = *(volatile DWORD *)(base + 0x14a6544);
-    for (i = 0; i < 257; ++i) state->table[i] = *(volatile BYTE *)(base + 0x14a6560 + i);
-    page_after = *(volatile DWORD *)(base + 0x14a6664);
-    guard_after = *(volatile DWORD *)(base + 0x14a67b8);
-    flag_after = *(volatile DWORD *)(base + 0x14a5514);
-    pointer_after = *(volatile DWORD *)(base + 0x14a6544);
-    state->available = TRUE;
-    state->stable = page_after == state->page && guard_after == state->guard &&
-                    flag_after == state->selector_flag && pointer_after == state->info_pointer;
-    return state->stable;
-}
-static BOOL JapanState(const State *s)
-{
-    return s->available && s->stable && s->guard == 1 && s->page == 932 &&
-           EqualBytes(s->table, kJapanTable, sizeof(kJapanTable));
-}
-
