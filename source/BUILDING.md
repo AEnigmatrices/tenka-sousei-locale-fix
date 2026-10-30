@@ -32,6 +32,8 @@ To run the forwarding check against an additional DLL, pass its path to `tests\r
 
 The CI build also runs `scripts/package-release.ps1` and `scripts/verify-release-package.ps1` to validate ZIP contents, loose release assets, their two checksum layers and the recorded source revision without changing the distributed binary.
 
+For the separate, test-only officer-name adapter checks, see the [synthetic x86 harness](../tests/officer-name-synthetic/README.md). From PowerShell, run `./tests/officer-name-synthetic/Run-Tests.ps1 -IncludeAsan` to check Debug, Release and AddressSanitizer configurations. These checks also run in a [dedicated workflow](../.github/workflows/officer-name-synthetic.yml).
+
 ## Build outputs and releases
 
 Release packaging uses the separate, checked-in `../d3d8.dll`. Copy the DLL to distribute from `source/d3d8.dll` to the repository root before following [RELEASING.md](../RELEASING.md).

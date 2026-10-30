@@ -113,6 +113,6 @@ compatibility guards.
 
 See the sibling translation checkout's
 [research report](../../../tenka-sousei-translation/research/officer-name-synthetic-prototype.md).
-This relative link requires both repositories as sibling directories. The test
-changes are local and uncommitted; no public source or binary release is created
-by this pass.
+This relative link requires both repositories as sibling directories. The harness
+is test-only; its sources and generated outputs are excluded from the DLL release
+package.
