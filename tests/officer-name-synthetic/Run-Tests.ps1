@@ -43,7 +43,7 @@ foreach ($configuration in $configurations) {
             Get-Content -LiteralPath (Join-Path $output 'results.json') -ErrorAction SilentlyContinue
             throw "$configuration build/test failed with exit $exit; diagnostics retained in out."
         }
-        & (Join-Path $root 'Verify-Assembly.ps1') -Listing (Join-Path $output 'abi.asm')
+        & (Join-Path $root 'Verify-Assembly.ps1') -Listing (Join-Path $output 'abi.cod')
         $result = Get-Content -LiteralPath (Join-Path $output 'results.json') -Raw | ConvertFrom-Json
         if ($result.failures -ne 0 -or $result.architecture -ne 'x86' -or $result.tests -lt 70) { throw 'Unexpected or incomplete native test result.' }
         $summary += [pscustomobject]@{
