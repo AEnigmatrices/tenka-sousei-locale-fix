@@ -1,0 +1,24 @@
+name: Synthetic officer-name x86 tests
+on:
+  push:
+    paths:
+      - "tests/officer-name-synthetic/**"
+      - ".github/workflows/officer-name-synthetic.yml"
+  pull_request:
+    paths:
+      - "tests/officer-name-synthetic/**"
+      - ".github/workflows/officer-name-synthetic.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Build and run isolated x86 tests
+        shell: pwsh
+        run: ./tests/officer-name-synthetic/Run-Tests.ps1 -IncludeAsan
